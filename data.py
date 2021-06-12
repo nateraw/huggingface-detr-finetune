@@ -66,13 +66,7 @@ class CocoDataModule(pl.LightningDataModule):
         )
 
     def train_dataloader(self):
-        return DataLoader(
-            self.train_dataset, collate_fn=self.data_collator, batch_size=self.train_batch_size, shuffle=True
-        )
+        return DataLoader(self.train_dataset, collate_fn=self.data_collator, batch_size=self.train_batch_size)
 
     def val_dataloader(self):
         return DataLoader(self.val_dataset, collate_fn=self.data_collator, batch_size=self.val_batch_size)
-
-
-if __name__ == "__main__":
-    dm = CocoDataModule()

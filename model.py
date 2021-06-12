@@ -21,7 +21,6 @@ class DetrFinetuner(pl.LightningModule):
         self.forward = self.model.forward
 
     def shared_step(self, batch, mode='train'):
-        batch['labels'] = [{k: v.to(self.device) for k, v in t.items()} for t in batch["labels"]]
         outputs = self(**batch)
         self.log(f"{mode}_loss", outputs.loss)
         self.log_dict({f"{mode}_{k}": v for k, v in outputs.loss_dict.items()})
