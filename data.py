@@ -1,4 +1,4 @@
-import os
+from pathlib import Path
 
 import pytorch_lightning as pl
 import torchvision
@@ -8,7 +8,7 @@ from transformers import DetrFeatureExtractor
 
 class CocoDetection(torchvision.datasets.CocoDetection):
     def __init__(self, img_folder, feature_extractor, train=True):
-        ann_file = os.path.join(img_folder, "custom_train.json" if train else "custom_val.json")
+        ann_file = Path(img_folder) / ("custom_train.json" if train else "custom_val.json")
         super(CocoDetection, self).__init__(img_folder, ann_file)
         self.feature_extractor = feature_extractor
 
@@ -52,7 +52,7 @@ class CocoDataModule(pl.LightningDataModule):
         val_batch_size: int = 2,
     ):
         super().__init__()
-        self.data_dir = data_dir
+        self.data_dir = Path(data_dir)
         self.model_name_or_path = model_name_or_path
         self.train_batch_size = train_batch_size
         self.val_batch_size = val_batch_size
@@ -68,9 +68,7 @@ class CocoDataModule(pl.LightningDataModule):
         return DataLoader(self.val_dataset, collate_fn=self.data_collator, batch_size=self.val_batch_size)
 
     def build_datasets(self):
-        self.train_dataset = CocoDetection(
-            img_folder=os.path.join(self.data_dir, "train"), feature_extractor=self.feature_extractor
-        )
+        self.train_dataset = CocoDetection(img_folder=self.data_dir / "train", feature_extractor=self.feature_extractor)
         self.val_dataset = CocoDetection(
-            img_folder=os.path.join(self.data_dir, "val"), feature_extractor=self.feature_extractor, train=False
+            img_folder=self.data_dir / "val", feature_extractor=self.feature_extractor, train=False
         )
