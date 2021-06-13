@@ -1,5 +1,5 @@
 import pytorch_lightning as pl
-from transformers import DetrConfig, DetrForObjectDetection
+from transformers import DetrForObjectDetection
 import torch
 
 class DetrFinetuner(pl.LightningModule):
@@ -8,17 +8,14 @@ class DetrFinetuner(pl.LightningModule):
         super().__init__()
         self.save_hyperparameters()
 
-        # HACK - This block should be fixed in transformers repo to work in 1 line of code...
-        model = DetrForObjectDetection.from_pretrained(self.hparams.model_name_or_path)
-        state_dict = model.state_dict()
-        del state_dict["class_labels_classifier.weight"]
-        del state_dict["class_labels_classifier.bias"]
-        config = DetrConfig.from_pretrained(self.hparams.model_name_or_path, num_labels=self.hparams.num_labels)
-        model = DetrForObjectDetection(config)
-        model.load_state_dict(state_dict, strict=False)
+        self.model = DetrForObjectDetection.from_pretrained(self.hparams.model_name_or_path)
+        self.model.config.num_labels = self.hparams.num_labels
+        self.model.class_labels_classifier = torch.nn.Linear(
+            self.model.config.d_model, self.hparams.num_labels + 1
+        )
 
-        self.model = model
         self.forward = self.model.forward
+        self.save_pretrained = self.model.save_pretrained
 
     def shared_step(self, batch, mode='train'):
         outputs = self(**batch)

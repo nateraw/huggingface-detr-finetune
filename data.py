@@ -48,7 +48,7 @@ class CocoDataModule(pl.LightningDataModule):
         self,
         data_dir: str = "./balloon",
         model_name_or_path: str = "facebook/detr-resnet-50",
-        train_batch_size: int = 4,
+        train_batch_size: int = 2,
         val_batch_size: int = 2,
     ):
         super().__init__()
@@ -58,15 +58,19 @@ class CocoDataModule(pl.LightningDataModule):
         self.val_batch_size = val_batch_size
         self.feature_extractor = DetrFeatureExtractor.from_pretrained(self.model_name_or_path)
         self.data_collator = CocoCollator(self.feature_extractor)
-        self.train_dataset = CocoDetection(
-            img_folder=os.path.join(self.data_dir, "train"), feature_extractor=self.feature_extractor
-        )
-        self.val_dataset = CocoDetection(
-            img_folder=os.path.join(self.data_dir, "val"), feature_extractor=self.feature_extractor, train=False
-        )
+
+        self.build_datasets()
 
     def train_dataloader(self):
         return DataLoader(self.train_dataset, collate_fn=self.data_collator, batch_size=self.train_batch_size)
 
     def val_dataloader(self):
         return DataLoader(self.val_dataset, collate_fn=self.data_collator, batch_size=self.val_batch_size)
+
+    def build_datasets(self):
+        self.train_dataset = CocoDetection(
+            img_folder=os.path.join(self.data_dir, "train"), feature_extractor=self.feature_extractor
+        )
+        self.val_dataset = CocoDetection(
+            img_folder=os.path.join(self.data_dir, "val"), feature_extractor=self.feature_extractor, train=False
+        )
